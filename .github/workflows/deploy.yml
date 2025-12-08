@@ -3,7 +3,7 @@ name: Deploy to jquiroz.net
 on:
   push:
     branches:
-      - main   # o la rama que quieras usar
+      - main   # o la rama que quieres usar
 
 jobs:
   deploy:
@@ -30,46 +30,46 @@ jobs:
 
       - name: Deploy on server
         run: |
-          ssh "${SSH_USER}@${SSH_HOST}" << 'EOF'
+          ssh "${SSH_USER}@${SSH_HOST}" "bash -s" << EOF
             set -e
 
-            # Variables que vienen del entorno del job
-            SITE_DIR="${SITE_DIR}"
-            GIT_REPO_URL="${GIT_REPO_URL}"
-            BRANCH="${BRANCH}"
-
+            echo "=== Entrando a /home/pweb/sites ==="
             cd /home/pweb/sites
-            mkdir -p "$SITE_DIR"
-            cd "$SITE_DIR"
 
+            echo "=== Creando carpeta si no existe: ${SITE_DIR} ==="
+            mkdir -p "${SITE_DIR}"
+            cd "${SITE_DIR}"
+
+            echo "=== Revisando si existe .git ==="
             if [ ! -d .git ]; then
-              echo "Primera vez: clonando el repositorio del alumno..."
-              # Clona el fork del alumno directamente en esta carpeta
-              git clone "$GIT_REPO_URL" .
+              echo ">>> Primera vez: clonando ${GIT_REPO_URL}"
+              git clone "${GIT_REPO_URL}" .
             else
-              echo "Repositorio ya existente: haciendo fetch..."
+              echo ">>> Repositorio ya existe, haciendo fetch..."
               git fetch --all
             fi
 
-            # Ahora comparamos commits local vs remoto
-            LOCAL=$(git rev-parse HEAD)
-            REMOTE=$(git rev-parse origin/"${BRANCH}")
+            echo "=== Comparando commits local vs remoto ==="
+            LOCAL=\$(git rev-parse HEAD || echo "")
+            REMOTE=\$(git rev-parse origin/${BRANCH} || echo "")
 
-            if [ "$LOCAL" != "$REMOTE" ]; then
-              echo "Hay nueva versión, haciendo pull..."
+            if [ "\$LOCAL" != "\$REMOTE" ]; then
+              echo ">>> Hay nueva versión, haciendo git pull..."
               git pull origin "${BRANCH}"
 
-              # Si el alumno usa docker-compose:
+              echo ">>> Verificando docker-compose..."
               if [ -f docker-compose.yml ] || [ -f docker-compose.yaml ]; then
-                echo "Reiniciando contenedores con Docker Compose..."
+                echo ">>> Reiniciando contenedores..."
                 docker compose down
                 docker compose pull || true
                 docker compose up -d --build
-                echo "Despliegue con Docker completado."
+                echo ">>> Despliegue completado."
               else
-                echo "No se encontró docker-compose, solo se actualizaron archivos."
+                echo ">>> No hay docker-compose, solo se actualizaron archivos."
               fi
             else
-              echo "El servidor ya tiene la última versión, no se hace nada."
+              echo ">>> El servidor ya está actualizado."
             fi
+
+            echo "=== Fin del despliegue ==="
           EOF
