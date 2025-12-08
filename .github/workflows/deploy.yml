@@ -44,6 +44,10 @@ jobs:
             mkdir -p "\$PROJECT_PATH"
             cd "\$PROJECT_PATH"
 
+            # Nombre de proyecto único por estudiante
+            export COMPOSE_PROJECT_NAME="${SITE_DIR}_${PROJECT_DIR}"
+            echo "COMPOSE_PROJECT_NAME=\$COMPOSE_PROJECT_NAME"
+
             FIRST_CLONE=0
 
             if [ ! -d .git ]; then
@@ -52,7 +56,7 @@ jobs:
                 git clone "${GIT_REPO_URL}" .
                 FIRST_CLONE=1
               else
-                echo "ERROR: La carpeta \$PROJECT_PATH no está vacía y no es un repo git."
+                echo "ERROR: La carpeta \$PROJECT_PATH no está vacía y no es repo git."
                 exit 1
               fi
             else
@@ -72,7 +76,6 @@ jobs:
               echo ">>> Commits local y remoto son iguales."
             fi
 
-            # Solo desplegamos si es el primer clone o hubo cambios
             if [ "\$FIRST_CLONE" = "1" ] || [ "\$CHANGED" = "1" ]; then
               echo ">>> Ejecutando despliegue con Docker Compose..."
               if [ -f docker-compose.yml ] || [ -f docker-compose.yaml ]; then
@@ -89,4 +92,5 @@ jobs:
 
             echo "=== Fin del despliegue ==="
           EOF
+
 
