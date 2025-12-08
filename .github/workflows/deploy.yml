@@ -28,7 +28,6 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           echo "Host *" > ~/.ssh/config
           echo "  StrictHostKeyChecking no" >> ~/.ssh/config
-
       - name: Deploy on server
         run: |
           ssh "${SSH_USER}@${SSH_HOST}" "bash -s" << EOF
@@ -44,8 +43,10 @@ jobs:
             mkdir -p "\$PROJECT_PATH"
             cd "\$PROJECT_PATH"
 
-            # Nombre de proyecto único por estudiante
-            export COMPOSE_PROJECT_NAME="${SITE_DIR}_${PROJECT_DIR}"
+            # Construir nombre de proyecto y limpiarlo
+            RAW_NAME="${SITE_DIR}_${PROJECT_DIR}"
+            CLEAN_NAME=\$(printf "%s" "\$RAW_NAME" | tr 'A-Z' 'a-z' | tr -d ' \r\n')
+            export COMPOSE_PROJECT_NAME="\$CLEAN_NAME"
             echo "COMPOSE_PROJECT_NAME=\$COMPOSE_PROJECT_NAME"
 
             FIRST_CLONE=0
@@ -92,5 +93,6 @@ jobs:
 
             echo "=== Fin del despliegue ==="
           EOF
+
 
 
