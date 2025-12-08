@@ -8,8 +8,7 @@ services:
       MYSQL_DATABASE: web-dbase
       MYSQL_USER: web
       MYSQL_PASSWORD: web123456
-    ports:
-      - "3306:3306"
+
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
